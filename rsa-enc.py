@@ -21,6 +21,11 @@ Adds randomness to the m and returns r||m of total bit length key.numBits.
 Randomness is half of the total length.
 '''
 def addRandom(m, key):
+    if type(key) is not Key:
+        raise TypeError('key must be of type Key')
+    if type(m) is not int:
+        raise TypeError('m must be of type int')
+
     numRandBits = key.numBits // 2
     numMessageBits = key.numBits - numRandBits
     r = getRandom(numRandBits)
@@ -29,13 +34,31 @@ def addRandom(m, key):
     return (r << numMessageBits) | m
 
 '''
-encrypts <m> with public key <key> in ZN*
+Performs modular exponentiation.
+Calculates [m^(key.ed) mod key.N].
+'''
+def modExp(m, key):
+    if type(key) is not Key:
+        raise TypeError('key must be of type Key')
+    if type(m) is not int:
+        raise TypeError('m must be of type int')
+
+    return (m ** key.ed) % key.N
+
+'''
+encrypts <m> with public key <key> to element in ZN*.
 '''
 def enc(m, key):
     if type(key) is not Key:
         raise TypeError('key must be of type Key')
+    if type(m) is not int:
+        raise TypeError('m must be of type int')
     
+    # mhat is an element in ZN*.
     mhat = addRandom(m, key)
+
+    return modExp(mhat, key)
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
@@ -50,7 +73,7 @@ if __name__ == "__main__":
     with open(inputFileName, 'r') as inputFile:
         message = int(inputFile.read())
 
-    enc(message, Key(numBits, N, e))
+    print(enc(message, Key(numBits, N, e)))
     
     # with open(outputFileName, 'w') as outputFile:
     #     outputFile.write()
