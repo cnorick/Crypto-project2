@@ -1,14 +1,15 @@
 import sys
 from random import getrandbits
+from Crypto.Util import number
 
 '''
-ed is either e or d depending on whether or not the key is a public or private key.
 '''
 class Key (object):
-    def __init__(self, numBits, N, ed):
+    def __init__(self, numBits, N, e=None, d=None):
         self.numBits = numBits
         self.N = N
-        self.ed = ed
+        self.e = e
+        self.d = d
 
 '''
 Returns random int with r bits.
@@ -57,7 +58,17 @@ def modExp(m, key):
         raise TypeError('key must be of type Key')
     if type(m) is not int:
         raise TypeError('m must be of type int')
-    return pow(m, key.ed, key.N)
+    ed = key.e if key.e != None else key.d
+    return pow(m, ed, key.N)
+
+'''
+Returns a random n-bit prime number.
+'''
+def getPrime(n):
+    if type(n) is not int:
+        raise TypeError('n must be of type int')
+
+    return number(n)
 
 '''
 encrypts <m> with public key <key> to element in ZN*.
@@ -73,6 +84,9 @@ def enc(m, key):
 
     return modExp(mhat, key)
 
+'''
+decrypts <c> with private key <key>.
+'''
 def dec(c, key):
     if type(key) is not Key:
         raise TypeError('key must be of type Key')
@@ -83,12 +97,19 @@ def dec(c, key):
 
     return removeRandom(mhat, key)
 
+'''
+Creates a valid Key object.
+'''
+def keygen(n):
+    return
+
+
 def test():
     N = 3233
     numBits = 12
     for message in range(2**(numBits - numBits//2 - 2)):
-        privKey = Key(12, N, 413)
-        pubKey = Key(12, N, 17)
+        privKey = Key(12, N, e=413)
+        pubKey = Key(12, N, d=17)
         e = enc(message, pubKey)
         d = dec(e, privKey)
         if d != message:
@@ -109,9 +130,9 @@ if __name__ == "__main__":
         message = int(inputFile.read())
 
     if mode == 'e':
-        output = enc(message, Key(numBits, N, ed))
+        output = enc(message, Key(numBits, N, e=ed))
     elif mode == 'd':
-        output = dec(message, Key(numBits, N, ed))
+        output = dec(message, Key(numBits, N, d=ed))
     else:
         raise ValueError("mode must be e (encrypt) or d (decrypt)")
     
