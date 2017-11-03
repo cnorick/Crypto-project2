@@ -58,7 +58,7 @@ def removeRandom(m, key):
     return ((2 ** numMessageBits) - 1) & m
 
 '''
-Performs modular exponentiation.
+Performs modular exponentiation using right-to-left binary method.
 Calculates [m^(key.ed) mod key.N].
 Only one of key.e and key.d may be specified.
 '''
@@ -71,7 +71,17 @@ def modExp(m, key):
         raise ValueError('it is ambiguous whether key is private or public')
 
     ed = key.e if key.e != None else key.d
-    return pow(m, ed, key.N)
+    if key.N == 1:
+        return 0
+    
+    result = 1
+    m %= key.N
+    while ed > 0:
+        if ed & 1: # If ed is odd...
+           result = (result * m) % key.N
+        ed = ed >> 1
+        m = (m ** 2) % key.N
+    return result
 
 '''
 Returns a random n-bit prime number.
