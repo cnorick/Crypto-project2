@@ -4,9 +4,17 @@ from Crypto.Util import number
 from fractions import gcd
 
 '''
+Object to hold keys. To use with enc/dec, only one of e and d may be specified.
 '''
 class Key (object):
     def __init__(self, numBits, N, e=None, d=None):
+        if type(numBits) is not int:
+            raise TypeError('numBits must be of type int. got type {}'.format(type(numBits)))
+        if numBits <= 0:
+            raise ValueError('numBits must be positive. got value {}'.format(numBits))
+        if type(N) is not int:
+            raise TypeError('N must be of type int. got type {}'.format(type(N)))
+
         self.numBits = numBits
         self.N = N
         self.e = e
@@ -53,6 +61,7 @@ def removeRandom(m, key):
 '''
 Performs modular exponentiation.
 Calculates [m^(key.ed) mod key.N].
+Only one of key.e and key.d may be specified.
 '''
 def modExp(m, key):
     if type(key) is not Key:
@@ -70,7 +79,9 @@ Returns a random n-bit prime number.
 '''
 def getPrime(n):
     if type(n) is not int:
-        raise TypeError('n must be of type int')
+        raise TypeError('n must be of type int. Got value {}'.format(type(n)))
+    if n < 0:
+        raise ValueError('n must be positive. Got value {}'.format(n))
 
     return number.getPrime(n)
 
@@ -85,13 +96,13 @@ def egcd(a, b):
     return (g, x - (b//a) * y, y)
 
 '''
-x = mulinv(b) mod n, (x * b) % n == 1
+Returns the multiplicative inverse of a mod N.
 '''
-def modinv(a, m):
-    g, x, y = egcd(a, m)
+def modInverse(a, N):
+    g, x, y = egcd(a, N)
     if g != 1:
         raise Exception('No modular inverse')
-    return x%m
+    return x%N
 
 '''
 encrypts <m> with public key <key> to element in ZN*.
@@ -104,11 +115,7 @@ def enc(m, key):
         raise TypeError('m must be of type int')
     
     # mhat is an element in ZN*.
-    # print(bin(m))
     mhat = addRandom(m, key)
-    # print(bin(mhat))
-    print('enc {}'.format(mhat))
-    print('enc post exp {}'.format(modExp(mhat, key)))
 
     return modExp(mhat, key)
 
@@ -121,16 +128,15 @@ def dec(c, key):
     if type(c) is not int:
         raise TypeError('m must be of type int')
 
-    print('dec pre exp {}'.format(c))
     mhat = modExp(c, key)
-    print('dec {}'.format(mhat))
 
     return removeRandom(mhat, key)
 
 '''
-Creates a valid Key object.
+Creates a valid Key object that can be used with enc/dec.
 '''
 def keygen(n):
+    # Try 10 times to find p and q that are different.
     for i in range(10):
         p = getPrime(n)
         q = getPrime(n)
@@ -143,17 +149,21 @@ def keygen(n):
     N = p * q
     order = (p - 1) * (q - 1)
 
-    smallPrimes = [3, 5, 7, 11, 13]
+    # e will be set to one of the first 8 primes. If none of these are coprime with order, then stop execution.
+    smallPrimes = [3, 5, 7, 11, 13, 17, 19, 23]
     for e in smallPrimes:
         if gcd(e, order) == 1:
             break;
     else:
         raise Exception('could not a small number coprime to {}.'.format(order))
 
-    d = modinv(e, order)
+    d = modInverse(e, order)
     
     return Key(n, N, e=e, d=d)
 
+'''
+Tests enc and dec for the given keys.
+'''
 def test():
     N = 3233
     numBits = 12
@@ -166,13 +176,18 @@ def test():
             print('d: {d}, message: {message}'.format(d=d, message=message))
             raise Exception("IT'S BROKEN")
 
+'''
+Tests keygen, enc, and dec for all n-bit messages for n up to 24.
+'''
 def testKeyGen():
-    for numBits in range(12, 30):
+    for numBits in range(3, 25):
         for message in range(1, 2**(numBits - numBits // 2 - 2) - 1):
-            for i in range(10):
+            for i in range(1):
                 k = keygen(numBits)
                 # print('numBits {}, message: {}, k.d: {}, k.e: {}, k.N: {}'.format(numBits, message, k.d, k.e, k.N))
-                assert (message ** (k.e * k.d)) % k.N == message
+
+                # Ensure that e and d are inverses of each other mod N.
+                assert pow(message, k.e * k.d, k.N) == message
 
                 privKey = Key(k.numBits, k.N, d=k.d)
                 pubKey = Key(k.numBits, k.N, e=k.e)
@@ -184,39 +199,24 @@ def testKeyGen():
                     raise Exception("IT'S BROKEN")
 
 if __name__ == "__main__":
-    # if len(sys.argv) != 5:
-    #     print("usage: python rsa-enc.py <e|d> <keyFile> <inputFile> <outputFile>")
-    #     sys.exit()
+    if len(sys.argv) != 5:
+        print("usage: python rsa-enc.py <e|d> <keyFile> <inputFile> <outputFile>")
+        sys.exit()
 
-    # (mode, keyFileName, inputFileName, outputFileName) = sys.argv[1:5]
+    (mode, keyFileName, inputFileName, outputFileName) = sys.argv[1:5]
 
-    # with open(keyFileName, 'r') as keyFile:
-    #     (numBits, N, ed) = [int(line) for line in keyFile.readlines()]
+    with open(keyFileName, 'r') as keyFile:
+        (numBits, N, ed) = [int(line) for line in keyFile.readlines()]
 
-    # with open(inputFileName, 'r') as inputFile:
-    #     message = int(inputFile.read())
+    with open(inputFileName, 'r') as inputFile:
+        message = int(inputFile.read())
 
-    # if mode == 'e':
-    #     output = enc(message, Key(numBits, N, e=ed))
-    # elif mode == 'd':
-    #     output = dec(message, Key(numBits, N, d=ed))
-    # else:
-    #     raise ValueError("mode must be e (encrypt) or d (decrypt)")
+    if mode == 'e': # encryption
+        output = str(enc(message, Key(numBits, N, e=ed)))
+    elif mode == 'd': # decryption
+        output = str(dec(message, Key(numBits, N, d=ed)))
+    else:
+        raise ValueError("mode must be e (encrypt), d (decrypt), or k (keygen)")
     
-    # with open(outputFileName, 'w') as outputFile:
-    #     outputFile.write(str(output))
-    # test()
-    testKeyGen()
-
-    # m = 1
-    # k = keygen(11)
-    # r = addRandom(m, k)
-    # a = removeRandom(m, k)
-
-    # print(bin(m))
-    # print(bin(r))
-    # print(bin(a))
-
-    # me = modExp(m, Key(k.numBits, k.N, k.e))
-
-    # print(bin(me))
+    with open(outputFileName, 'w') as outputFile:
+        outputFile.write(output)
