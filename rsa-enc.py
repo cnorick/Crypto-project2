@@ -132,8 +132,8 @@ Creates a valid Key object.
 '''
 def keygen(n):
     for i in range(10):
-        p = getPrime(n // 2)
-        q = getPrime(n // 2)
+        p = getPrime(n)
+        q = getPrime(n)
 
         if p != q:
             break;
@@ -168,7 +168,7 @@ def test():
 
 def testKeyGen():
     for numBits in range(12, 30):
-        for message in range(3, 2**(numBits - numBits // 2 - 2) - 1):
+        for message in range(1, 2**(numBits - numBits // 2 - 2) - 1):
             for i in range(10):
                 k = keygen(numBits)
                 # print('numBits {}, message: {}, k.d: {}, k.e: {}, k.N: {}'.format(numBits, message, k.d, k.e, k.N))
