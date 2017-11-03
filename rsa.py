@@ -200,23 +200,37 @@ def testKeyGen():
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print("usage: python rsa-enc.py <e|d> <keyFile> <inputFile> <outputFile>")
+        print("usage: python rsa.py e | d keyFile inputFile outputFile\n\
+       python rsa.py k publicKeyFile secretKeyFile numBits")
         sys.exit()
-
-    (mode, keyFileName, inputFileName, outputFileName) = sys.argv[1:5]
-
-    with open(keyFileName, 'r') as keyFile:
-        (numBits, N, ed) = [int(line) for line in keyFile.readlines()]
-
-    with open(inputFileName, 'r') as inputFile:
-        message = int(inputFile.read())
-
-    if mode == 'e': # encryption
-        output = str(enc(message, Key(numBits, N, e=ed)))
-    elif mode == 'd': # decryption
-        output = str(dec(message, Key(numBits, N, d=ed)))
-    else:
-        raise ValueError("mode must be e (encrypt), d (decrypt), or k (keygen)")
     
-    with open(outputFileName, 'w') as outputFile:
-        outputFile.write(output)
+    mode = sys.argv[1]
+    if mode == 'k':
+        (publicFileName, secretFileName, numBits) = sys.argv[2:5]
+
+        key = keygen(int(numBits))
+
+        with open(publicFileName, 'w') as publicFile:
+            publicFile.writelines(map(str, [key.numBits, key.N, key.e]))
+
+        with open(secretFileName, 'w') as secretFile:
+            secretFile.writelines(map(str, [key.numBits, key.N, key.d]))
+        
+    else:
+        (keyFileName, inputFileName, outputFileName) = sys.argv[2:5]
+
+        with open(keyFileName, 'r') as keyFile:
+            (numBits, N, ed) = [int(line) for line in keyFile.readlines()]
+
+        with open(inputFileName, 'r') as inputFile:
+            message = int(inputFile.read())
+
+        if mode == 'e': # encryption
+            output = str(enc(message, Key(numBits, N, e=ed)))
+        elif mode == 'd': # decryption
+            output = str(dec(message, Key(numBits, N, d=ed)))
+        else:
+            raise ValueError("mode must be e (encrypt), d (decrypt), or k (keygen)")
+        
+        with open(outputFileName, 'w') as outputFile:
+            outputFile.write(output)
