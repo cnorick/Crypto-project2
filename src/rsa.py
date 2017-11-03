@@ -109,10 +109,14 @@ if __name__ == "__main__":
         key = keygen(int(numBits))
 
         with open(publicFileName, 'w') as publicFile:
-            publicFile.writelines(map(str, [key.numBits, key.N, key.e]))
+            publicFile.write(str(key.numBits) + '\n')
+            publicFile.write(str(key.N) + '\n')
+            publicFile.write(str(key.e) + '\n')
 
         with open(secretFileName, 'w') as secretFile:
-            secretFile.writelines(map(str, [key.numBits, key.N, key.d]))
+            secretFile.write(str(key.numBits) + '\n')
+            secretFile.write(str(key.N) + '\n')
+            secretFile.write(str(key.d) + '\n')
         
     else:
         (keyFileName, inputFileName, outputFileName) = sys.argv[2:5]
