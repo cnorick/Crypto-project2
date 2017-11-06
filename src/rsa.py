@@ -2,11 +2,11 @@ import sys
 from helpers import Key, addRandom, removeRandom, modExp, getPrime, modInverse
 from fractions import gcd
 
-'''
-encrypts <m> with public key <key> to element in ZN*.
-m must not exceed key.n / 2 - 2 bits.
-'''
 def enc(m, key):
+    '''
+    encrypts <m> with public key <key> to element in ZN*.
+    m must not exceed key.n / 2 - 2 bits.
+    '''
     if type(key) is not Key:
         raise TypeError('key must be of type Key')
     if type(m) is not int:
@@ -17,10 +17,10 @@ def enc(m, key):
 
     return modExp(mhat, key)
 
-'''
-decrypts <c> with private key <key>.
-'''
 def dec(c, key):
+    '''
+    decrypts <c> with private key <key>.
+    '''
     if type(key) is not Key:
         raise TypeError('key must be of type Key')
     if type(c) is not int:
@@ -30,10 +30,10 @@ def dec(c, key):
 
     return removeRandom(mhat, key)
 
-'''
-Creates a valid Key object that can be used with enc/dec.
-'''
 def keygen(n):
+    '''
+    Creates a valid Key object that can be used with enc/dec.
+    '''
     # Try 10 times to find p and q that are different.
     for i in range(10):
         p = getPrime(n)
@@ -59,10 +59,10 @@ def keygen(n):
     
     return Key(n, N, e=e, d=d)
 
-'''
-Tests enc and dec for the given keys.
-'''
 def test():
+    '''
+    Tests enc and dec for the given keys.
+    '''
     N = 3233
     numBits = 12
     for message in range(2**(numBits - numBits // 2 - 2)):
@@ -74,10 +74,10 @@ def test():
             print('d: {d}, message: {message}'.format(d=d, message=message))
             raise Exception("IT'S BROKEN")
 
-'''
-Tests keygen, enc, and dec for all n-bit messages for n up to 24.
-'''
 def testKeyGen():
+    '''
+    Tests keygen, enc, and dec for all n-bit messages for n up to 24.
+    '''
     for numBits in range(3, 25):
         for message in range(1, 2**(numBits - numBits // 2 - 2) - 1):
             for i in range(1):

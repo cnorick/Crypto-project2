@@ -2,10 +2,10 @@ from Crypto.Util import number
 from random import getrandbits, randrange
 from fractions import gcd
 
-'''
-Object to hold keys. To use with enc/dec, only one of e and d may be specified.
-'''
 class Key (object):
+    '''
+    Object to hold keys. To use with enc/dec, only one of e and d may be specified.
+    '''
     def __init__(self, numBits, N, e=None, d=None):
         if type(numBits) is not int:
             raise TypeError('numBits must be of type int. got type {}'.format(type(numBits)))
@@ -19,17 +19,17 @@ class Key (object):
         self.e = e
         self.d = d
 
-'''
-Returns random int with r bits.
-'''
 def getRandom(r):
+    '''
+    Returns random int with r bits.
+    '''
     return getrandbits(r)
 
-'''
-Adds randomness to the m and returns r||m of total bit length key.numBits.
-Randomness is half of the total length.
-'''
 def addRandom(m, key):
+    '''
+    Adds randomness to the m and returns r||m of total bit length key.numBits.
+    Randomness is half of the total length.
+    '''
     if type(key) is not Key:
         raise TypeError('key must be of type Key')
     if type(m) is not int:
@@ -42,10 +42,10 @@ def addRandom(m, key):
     # Concat the randomness and the message.
     return (r << numMessageBits) | m
 
-'''
-Removes the randomness added to m by addRandom().
-'''
 def removeRandom(m, key):
+    '''
+    Removes the randomness added to m by addRandom().
+    '''
     if type(key) is not Key:
         raise TypeError('key must be of type Key')
     if type(m) is not int:
@@ -57,12 +57,12 @@ def removeRandom(m, key):
     # Remove the randomness from the message.
     return ((2 ** numMessageBits) - 1) & m
 
-'''
-Performs modular exponentiation using right-to-left binary method.
-Calculates [m^(key.ed) mod key.N].
-Only one of key.e and key.d may be specified.
-'''
 def modExp(m, key):
+    '''
+    Performs modular exponentiation using right-to-left binary method.
+    Calculates [m^(key.ed) mod key.N].
+    Only one of key.e and key.d may be specified.
+    '''
     if type(key) is not Key:
         raise TypeError('key must be of type Key')
     if type(m) is not int:
@@ -83,10 +83,10 @@ def modExp(m, key):
         m = (m ** 2) % key.N
     return result
 
-'''
-Returns a random n-bit prime number.
-'''
 def getPrime(n):
+    '''
+    Returns a random n-bit prime number.
+    '''
     if type(n) is not int:
         raise TypeError('n must be of type int. Got value {}'.format(type(n)))
     if n < 0:
@@ -98,20 +98,20 @@ def getPrime(n):
 
     return r
 
-'''
-Extended Euclidean Algorithm
-return (g, x, y) a*x + b*y = gcd(x, y)
-'''
 def egcd(a, b):
+    '''
+    Extended Euclidean Algorithm
+    return (g, x, y) a*x + b*y = gcd(x, y)
+    '''
     if a == 0:
         return (b, 0, 1)
     g, y, x = egcd(b%a,a)
     return (g, x - (b//a) * y, y)
 
-'''
-Returns the multiplicative inverse of a mod N.
-'''
 def modInverse(a, N):
+    '''
+    Returns the multiplicative inverse of a mod N.
+    '''
     g, x, y = egcd(a, N)
     if g != 1:
         raise Exception('No modular inverse')
