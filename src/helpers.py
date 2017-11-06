@@ -1,5 +1,5 @@
 from Crypto.Util import number
-from random import getrandbits
+from random import getrandbits, randrange
 from fractions import gcd
 
 '''
@@ -92,7 +92,11 @@ def getPrime(n):
     if n < 0:
         raise ValueError('n must be positive. Got value {}'.format(n))
 
-    return number.getPrime(n)
+    r = getRandom(n)
+    while not isProbablePrime(r):
+        r = getRandom(n)
+
+    return r
 
 '''
 Extended Euclidean Algorithm
@@ -112,3 +116,42 @@ def modInverse(a, N):
     if g != 1:
         raise Exception('No modular inverse')
     return x%N
+
+numBases = 40 # number of bases to try
+def isProbablePrime(n):
+    """
+    Miller-Rabin primality test.
+    False means composite, True means probably prime.
+    """
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+
+    # write n-1 as 2^r * d.
+    r = 0
+    d = n-1
+    while True:
+        quo, rem = divmod(d, 2)
+        if rem == 1:
+            break
+        r += 1
+        d = quo
+
+    # test whether the base a is a witness for the compositeness of n.
+    def tryComposite(a):
+        if pow(a, d, n) == 1:
+            return False
+        for i in range(r):
+            if pow(a, 2**i * d, n) == n - 1:
+                return False
+        return True # n is definitely composite
+
+    for i in range(numBases):
+        a = randrange(2, n)
+        if tryComposite(a):
+            return False
+ 
+    return True # no base tested showed n as composite
